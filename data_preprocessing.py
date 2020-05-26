@@ -79,7 +79,7 @@ def remove_colinear_features(data_tensor, drop_threshold):
     dropped_X_df = X_df.drop(X_df[to_drop], axis=1)
     dropped_X = torch.from_numpy(dropped_X_df.values).float()
     dropped_X = torch.cat([y, dropped_X], dim=1)
-    return dropped_X
+    return to_drop, dropped_X
 
 
 def add_bias_layer(data_tensor):

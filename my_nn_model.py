@@ -5,8 +5,8 @@
 import torch.nn as nn
 import torch
 import matplotlib.pyplot as plt
-import evaluation
-import data as d
+import evaluation as eval
+import depression_data as dp_data
 import numpy as np
 
 
@@ -39,7 +39,7 @@ class FFNNModelComparison(object):
         self.data = data
 
         # leave one participates out
-        self.train_data_list, self.test_data_list = d.leave_one_participant_out(data)
+        self.train_data_list, self.test_data_list = dp_data.leave_one_participant_out(data, self.normalization_flag)
 
         # record all models pred and real labels
         self.all_real_ys = data[:, 0].long()
@@ -96,8 +96,8 @@ class FFNNModelComparison(object):
                 # record train loss and accuracy
                 train_loss = loss_func(train_pred_output, train_Y)
                 model_train_loss.append(train_loss.item())
-                train_pred_label = evaluation.predict_labels(train_pred_output)
-                _, current_train_accuracy = self.train_evaluation(train_pred_label, train_Y)
+                train_pred_label = eval.predict_labels(train_pred_output)
+                _, current_train_accuracy = eval.train_evaluation(train_pred_label, train_Y)
                 model_train_accuracy.append(current_train_accuracy)
 
 
@@ -106,8 +106,8 @@ class FFNNModelComparison(object):
                 # record test loss and accuracy
                 test_loss = loss_func(test_pred_output, test_Y)
                 model_test_loss.append(test_loss.item())
-                test_pred_label = evaluation.predict_labels(test_pred_output)
-                _, current_test_accuracy = self.train_evaluation(test_pred_label, test_Y)
+                test_pred_label = eval.predict_labels(test_pred_output)
+                _, current_test_accuracy = eval.train_evaluation(test_pred_label, test_Y)
                 model_test_accuracy.append(current_test_accuracy)
 
                 # back prop !!!!!
@@ -128,7 +128,7 @@ class FFNNModelComparison(object):
 
             # record final results of the model
             prediction_test = net(test_X)
-            final_model_pred_label = evaluation.predict_labels(prediction_test)
+            final_model_pred_label = eval.predict_labels(prediction_test)
             test_loss = loss_func(prediction_test, test_Y)
             self.all_final_pred_ys.append(final_model_pred_label)
 
@@ -138,20 +138,9 @@ class FFNNModelComparison(object):
             print(final_model_pred_label)
             print('The loss for testing set is: ' + str(test_loss))
 
-    def train_evaluation(self, current_pred_ys, current_real_ys):
-        """
-        Used to recording evaluation of model during training process
-        """
-        combine = evaluation.combine_pred_real_labels(current_pred_ys, current_real_ys)
-        eval_measures, accuracy = evaluation.evaluation(combine)
-        # print('evaluation for current model')
-        # print(eval_measures)
-        # print(overall_accuracy)
-        return eval_measures, accuracy
-
     def final_evaluation(self):
-        combine = evaluation.combine_pred_real_labels(self.all_final_pred_ys, self.all_real_ys)
-        eval_measures, overall_accuracy = evaluation.evaluation(combine)
+        combine = eval.combine_pred_real_labels(self.all_final_pred_ys, self.all_real_ys)
+        eval_measures, overall_accuracy = eval.evaluation(combine)
         print('evaluation for all model')
         print(eval_measures)
         print(overall_accuracy)

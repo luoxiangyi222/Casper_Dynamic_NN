@@ -8,6 +8,15 @@ import torch
 import pdb
 
 
+def train_evaluation(current_pred_ys, current_real_ys):
+    """
+    Used to recording evaluation of model during training process
+    """
+    combine = combine_pred_real_labels(current_pred_ys, current_real_ys)
+    eval_measures, accuracy = evaluation(combine)
+    return eval_measures, accuracy
+
+
 def combine_pred_real_labels(pred_ys, real_ys):
     pred_ys = pred_ys.unsqueeze(dim=1)
     real_ys = real_ys.unsqueeze(dim=1)

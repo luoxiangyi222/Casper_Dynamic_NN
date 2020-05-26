@@ -13,7 +13,6 @@ gsr_data = pd.read_excel('depression/gsr_features.xlsx').iloc[:, 1:]
 st_data = pd.read_excel('depression/skintemp_features.xlsx').iloc[:, 1:]
 pd_data = pd.read_excel('depression/pupil_features.xlsx').iloc[:, 1:]
 all_ft_data = pd.concat([gsr_data, st_data.iloc[:, 1:], pd_data.iloc[:, 1:]], axis=1)
-print(all_ft_data.describe().to_string())
 
 gsr_data = pre.df_to_float_tensor(gsr_data)
 st_data = pre.df_to_float_tensor(st_data)
@@ -26,7 +25,7 @@ all_ft_data = pre.df_to_float_tensor(all_ft_data)
 NUM_PARTICIPANT = 12
 
 
-def leave_one_participant_out(data: torch.Tensor):
+def leave_one_participant_out(data: torch.Tensor, normalize_flag):
     """
     Apply leave-one-participant-out for input data, segmentation in this way
     For cross validation!
@@ -36,18 +35,17 @@ def leave_one_participant_out(data: torch.Tensor):
     # 12 different participants hence 12 pairs of training and testing data
     train_data_list = []
     test_data_list = []
-    normalization_flag = 0  # 0 for minmax scalar
 
     for test_p in range(NUM_PARTICIPANT):
-        print('participant #' + str(test_p) + ' as testing person')
+        # print('participant #' + str(test_p) + ' as testing person')
         start = 16 * test_p
         end = start + 16
         train_data = torch.cat([data[:start], data[end:]])
         test_data = data[start:end]
 
         # Normalization
-        train_data = pre.normalization(train_data, normalization_flag)
-        test_data = pre.normalization(test_data, normalization_flag)
+        train_data = pre.normalization(train_data, normalize_flag)
+        test_data = pre.normalization(test_data, normalize_flag)
 
         train_data_list.append(train_data)
         test_data_list.append(test_data)
@@ -55,4 +53,3 @@ def leave_one_participant_out(data: torch.Tensor):
     return train_data_list, test_data_list
 
 
-train_list, test_list = leave_one_participant_out(all_ft_data)

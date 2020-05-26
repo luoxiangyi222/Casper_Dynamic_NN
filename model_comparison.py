@@ -26,7 +26,7 @@ import evaluation
 import data_preprocessing
 import my_casper_model as casper
 import my_nn_model as ffnn
-import data
+import depression_data as depr_data
 
 
 
@@ -188,7 +188,7 @@ To run model just uncomment related section!!!!!!!!!!!!!
 # st_LDA_casper.evaluation()
 #
 # # 8 PD + LDA + normalization
-# pd_LDA_casper = casper.CasPerModelComparison(pd_data,
+# pd_LDA_casper = casper.CasPerModelComparison(depr_data.pd_data,
 #                                              use_lda=True,
 #                                              normalization_flag=2)
 # pd_LDA_casper.visualization()
