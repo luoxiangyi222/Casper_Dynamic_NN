@@ -2,6 +2,13 @@
 # Author: Xiangyi Luo (u6162693)
 # Time: May 2020
 
+"""
+This module is all about datasets, I want to separate data part and implementation part
+Raw data loaded in this module
+Then function is used to create 12 different training and testing data
+In dataset paper, the authors call it leave_one_participant_out
+"""
+
 import pandas as pd
 import data_preprocessing as pre
 import torch
@@ -27,9 +34,10 @@ NUM_PARTICIPANT = 12
 
 def leave_one_participant_out(data: torch.Tensor, normalize_flag):
     """
-    Apply leave-one-participant-out for input data, segmentation in this way
-    For cross validation!
-    return: normalised training data and testing data, in total 12 pairs
+    Apply leave-one-participant-out for input data
+    @param data:
+    @param normalize_flag: determine how to normalize data
+    @return: normalised training data and testing data, in total 12 pairs
     """
 
     # 12 different participants hence 12 pairs of training and testing data

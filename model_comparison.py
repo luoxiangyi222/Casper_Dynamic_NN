@@ -3,32 +3,25 @@
 # Time: May 2020
 
 """
-There will be 8 different data input type, including:
-1 all features + normalization
-2 GSR + normalization
-3 ST + normalization
-4 PD + normalization
-
-5 all features + LDA + normalization
-6 GSR + LDA + normalization
-7 ST + LDA + normalization
-8 PD + LDA + normalization
+There will be 3 different data input type, including:
+1 all features
+2 all features + LDA
+3 all features + GA
 
 
 Each of these data will be put into:
 1. the feed forward network implemented by myself
-2. Cascade NN (modified version of Casper)
+2. Casper model described in technique paper by Prof. Golden Tom
 
-The goal of this is to compare performance of models given different preprocessed data
+The goal of this module is to compare performance of models given different preprocessed data
 """
 
 import evaluation
 import data_preprocessing
 import my_casper_model as casper
 import my_nn_model as ffnn
-import depression_data as depr_data
-
-
+import depression_data as dp_data
+import time
 
 
 # ##########################################################################################
@@ -39,157 +32,69 @@ import depression_data as depr_data
 To run model just uncomment related section!!!!!!!!!!!!!
 """
 
-# 1 all features + normalization + FFNN
-# all_ft_model = ffnn.FFNNModelComparison(data.all_ft_data, use_lda=False,
-#                                    learning_rate=0.05,
-#                                    normalization_flag=0,
-#                                    epochs=300,
-#                                    hidden_num=50)
-# all_ft_model.visualization()
-# all_ft_model.final_evaluation()
-
-# 2 GSR + normalization + FFNN
-# gsr_model = ffnn.FFNNModelComparison(gsr_data,
-#                                      use_lda=False,
-#                                      learning_rate=0.1,
-#                                      normalization_flag=2,
-#                                      epochs=3000,
-#                                      hidden_num=10)
-# gsr_model.visualization()
-# gsr_model.evaluation()
-
-# 3 ST + normalization + FFNN
-# st_model = ffnn.FFNNModelComparison(data.st_data,
-#                                     use_lda=False,
-#                                     learning_rate=0.01,
-#                                     normalization_flag=0,
-#                                     epochs=3000,
-#                                     hidden_num=10)
-# st_model.visualization()
-# st_model.final_evaluation()
-
-# 4 PD + normalization + FFNN
-# pd_model = ffnn.FFNNModelComparison(pd_data,
-#                                     use_lda=False,
-#                                     learning_rate=0.1,
-#                                     normalization_flag=2,
-#                                     epochs=3000,
-#                                     hidden_num=10)
-# pd_model.visualization()
-# pd_model.evaluation()
-
-# 5 all features + LDA + normalization
-# all_ft_lda_model = ffnn.FFNNModelComparison(all_ft_data,
-#                                             use_lda=True,
-#                                             learning_rate=0.1,
-#                                             normalization_flag=2,
-#                                             epochs=3000,
-#                                             hidden_num=10)
-# all_ft_lda_model.visualization()
-# all_ft_lda_model.evaluation()
-
-# 6 GSR + LDA + normalization
-# gsr_lda_model = ffnn.FFNNModelComparison(gsr_data,
-#                                          use_lda=True,
-#                                          learning_rate=0.1,
-#                                          normalization_flag=2,
-#                                          epochs=3000,
-#                                          hidden_num=10)
-# gsr_lda_model.visualization()
-# gsr_lda_model.evaluation()
-
-# 7 ST + LDA + normalization
-#
-# st_lda_model = ffnn.FFNNModelComparison(st_data,
-#                                         use_lda=True,
-#                                         learning_rate=0.1,
-#                                         normalization_flag=2,
-#                                         epochs=3000,
-#                                         hidden_num=10)
-# st_lda_model.visualization()
-# st_lda_model.evaluation()
-
-# 8 PD + LDA + normalization
-
-# pd_lda_model = ffnn.FFNNModelComparison(pd_data,
-#                                         use_lda=True,
-#                                         learning_rate=0.1,
-#                                         normalization_flag=2,
-#                                         epochs=3000,
-#                                         hidden_num=10)
-# pd_lda_model.visualization()
-# pd_lda_model.evaluation()
-
-# all_ft_casper = casper.CasPerModelComparison(all_ft_data,
-#                                              use_lda=False,
-#                                              normalization_flag=2)
-# all_ft_casper.visualization()
-# all_ft_casper.evaluation()
-
 
 # #######################################################################
 # CasPer
 # #######################################################################
 
 
-# 1 all features + normalization
-# all_ft_casper = casper.CasPerModelComparison(all_ft_data,
-#                                              use_lda=False,
-#                                              normalization_flag=2)
-# all_ft_casper.visualization()
-# all_ft_casper.evaluation()
+# 1 all features
+casper_allfeature_result_file = open("casper_allfeature_result.txt", "w+")
+casper_allfeature_result_file.write('All features \n')
+casper_allfeature_result_file.write('LDA: true  \n')
 
-# 2 GSR + normalization
-# gsr_casper = casper.CasPerModelComparison(gsr_data,
-#                                           use_lda=False,
-#                                           normalization_flag=2)
-# gsr_casper.visualization()
-# gsr_casper.evaluation()
+all_accuracy_list = []
+time_cost_list = []
+for hn in range(1, 20):
+    print('Hidden units: ' + str(hn))
+    casper_allfeature_result_file.write('hidden units: ' + str(hn) + '\n')
+    t1 = time.time()
+    casperCompare = casper.CasPerModelComparison(data=dp_data.all_ft_data, use_lda=False,
+                                                 normalization_flag=2, hidden_num=hn)
+    eval_measures, accuracy = casperCompare.final_evaluation()
+    all_accuracy_list.append(accuracy)
+    t2 = time.time()
+    time_cost = t2 - t1
+    time_cost_list.append(time_cost)
+
+    casper_allfeature_result_file.write(str(eval_measures))
+    casper_allfeature_result_file.write('\n')
+    casper_allfeature_result_file.write(str(accuracy) + '\n')
+
+casper_allfeature_result_file.write('accuracy list: \n' + str(all_accuracy_list) + '\n')
+casper_allfeature_result_file.write('time cost list: \n' + str(time_cost_list) + '\n')
+print(all_accuracy_list)
+
+casper_allfeature_result_file.close()
+
+
+# 2 all feature + LDA
+# compare number of hidden neurons
+
+# casper_allfeature_lda_result_file = open("casper_allfeature_LDA_result.txt", "w+")
+# casper_allfeature_lda_result_file.write('All features \n')
+# casper_allfeature_lda_result_file.write('LDA: true  \n')
 #
-# # 3 ST + normalization
+# all_lda_accuracy_list = []
+# time_cost_list = []
+# for hn in range(1, 20):
+#     print('Hidden units: ' + str(hn))
+#     casper_allfeature_lda_result_file.write('hidden units: ' + str(hn) + '\n')
+#     t1 = time.time()
+#     casperCompare = casper.CasPerModelComparison(data=dp_data.all_ft_data, use_lda=True,
+#                                                  normalization_flag=2, hidden_num=hn)
+#     eval_measures, accuracy = casperCompare.final_evaluation()
+#     all_lda_accuracy_list.append(accuracy)
+#     t2 = time.time()
+#     time_cost = t2 - t1
+#     time_cost_list.append(time_cost)
 #
-# st_casper = casper.CasPerModelComparison(st_data,
-#                                          use_lda=False,
-#                                          normalization_flag=2)
-# st_casper.visualization()
-# st_casper.evaluation()
+#     casper_allfeature_lda_result_file.write(str(eval_measures))
+#     casper_allfeature_lda_result_file.write('\n')
+#     casper_allfeature_lda_result_file.write(str(accuracy) + '\n')
 #
-# # 4 PD + normalization
+# casper_allfeature_lda_result_file.write('accuracy list: \n' + str(all_lda_accuracy_list) + '\n')
+# casper_allfeature_lda_result_file.write('time cost list: \n' + str(time_cost_list) + '\n')
+# print(all_lda_accuracy_list)
 #
-#
-# pd_casper = casper.CasPerModelComparison(pd_data,
-#                                          use_lda=False,
-#                                          normalization_flag=2)
-# pd_casper.visualization()
-# pd_casper.evaluation()
-#
-# #
-# # 5 all features + LDA + normalization
-#
-# all_ft_LDA_casper = casper.CasPerModelComparison(all_ft_data,
-#                                                  use_lda=True,
-#                                                  normalization_flag=2)
-# all_ft_LDA_casper.visualization()
-# all_ft_LDA_casper.evaluation()
-#
-# # 6 GSR + LDA + normalization
-# gsr_LDA_casper = casper.CasPerModelComparison(gsr_data,
-#                                               use_lda=True,
-#                                               normalization_flag=2)
-# gsr_LDA_casper.visualization()
-# gsr_LDA_casper.evaluation()
-#
-# # 7 ST + LDA + normalization
-#
-# st_LDA_casper = casper.CasPerModelComparison(data.st_data,
-#                                              use_lda=True,
-#                                              normalization_flag=2)
-# st_LDA_casper.visualization()
-# st_LDA_casper.evaluation()
-#
-# # 8 PD + LDA + normalization
-# pd_LDA_casper = casper.CasPerModelComparison(depr_data.pd_data,
-#                                              use_lda=True,
-#                                              normalization_flag=2)
-# pd_LDA_casper.visualization()
-# pd_LDA_casper.evaluation()
+# casper_allfeature_lda_result_file.close()

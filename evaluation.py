@@ -2,10 +2,13 @@
 # Author: Xiangyi Luo (u6162693)
 # Time: May 2020
 
+"""
+This module contains some function useful for evaluation
+"""
+
 
 import numpy as np
 import torch
-import pdb
 
 
 def train_evaluation(current_pred_ys, current_real_ys):
@@ -35,6 +38,9 @@ def predict_labels(out: torch.tensor):
 
 
 def compute_evaluation_measure(n_correct, tp_fp, tp_fn):
+    """
+    Helper function for the function evaluation
+    """
 
     if n_correct == 0:
         return 0, 0, 0

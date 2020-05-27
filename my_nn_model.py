@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import evaluation as eval
 import depression_data as dp_data
 import numpy as np
+import data_preprocessing as data_pre
 
 
 # ##############################################################################################
@@ -37,109 +38,116 @@ class FFNNModelComparison(object):
                  hidden_num=10
                  ):
         self.data = data
-
-        # leave one participates out
-        self.train_data_list, self.test_data_list = dp_data.leave_one_participant_out(data, self.normalization_flag)
-
-        # record all models pred and real labels
-        self.all_real_ys = data[:, 0].long()
-        self.all_final_pred_ys = []
-
         self.use_lda = use_lda
         self.lr = learning_rate
         self.normalization_flag = normalization_flag
-        self.hidden_num = hidden_num
+        self.NUM_HIDDEN = hidden_num
         self.epochs = epochs
 
-        self.num_participants = 12
+        self.time_period = 50
+
+        # leave one participates out
+        self.train_data_list, self.test_data_list = dp_data.leave_one_participant_out(data, self.normalization_flag)
+        self.NUM_MODEL = len(self.test_data_list)
+        
+        # define input and output size
+        self.output_size = 4
+
+        # record all models pred and real labels
+        self.all_real_label = data[:, 0].long()
+        self.all_final_pred_label = []
 
         # record loss and accuracy for visualization
         self.train_loss_12 = []
         self.test_loss_12 = []
-        self.train_accuracy_12 = []
-        self.test_accuracy_12 = []
+        # self.train_accuracy_12 = []
+        # self.test_accuracy_12 = []
 
         # train 12 different models
-        self.train()
-        self.all_final_pred_ys = torch.cat(self.all_final_pred_ys)
+        self.train_models()
+        # self.all_final_pred_label = torch.cat(self.all_final_pred_label)
 
-    def check_converge(self):
-        pass
+    def train_models(self):
+        """
+        Train 12 different models
+        @return: 
+        """
 
-    def train(self):
+        for m_id in range(self.NUM_MODEL):
+            train_data = self.train_data_list[m_id]
+            test_data = self.test_data_list[m_id]
 
-        for p in range(self.num_participants):
-            train_data = self.train_data_list[p]
-            test_data = self.test_data_list[p]
+            # pre-processing of train and test data
+            # LDA
+            if self.use_lda:
+                # use PCA before LDA to remove collinear variables
+                train_data, test_data = data_pre.pca(train_data, test_data, 10)
+
+                train_data = data_pre.lda_feature_selection(train_data, 3)
+                test_data = data_pre.lda_feature_selection(test_data, 3)
+                
+            train_X = train_data[:, 1:]
+            train_Y = train_data[:, 0]
+            
+            test_X = test_data[:, 1:]
+            test_Y = test_data[:, 0]
 
             input_size = train_data.shape[1] - 1
 
-            train_X = train_data[:, 1:]
-            train_Y = train_data[:, 0].long()
-            test_X = test_data[:, 1:]
-            test_Y = test_data[:, 0].long()
-
-            # for every iteration in cross validation, build new net
-            net = OneHiddenNN(input_size, self.hidden_num, 4)
+            # build new net
+            net = OneHiddenNN(input_size, self.NUM_HIDDEN, self.output_size)
             loss_func = nn.CrossEntropyLoss()
             optimiser = torch.optim.Adam(net.parameters(), lr=self.lr, weight_decay=0.01)
 
             # store all losses for visualisation
             model_train_loss = []
             model_test_loss = []
-            model_train_accuracy = []
-            model_test_accuracy = []
 
             for i in range(self.epochs):
                 # train
                 train_pred_output = net(train_X)
                 # record train loss and accuracy
-                train_loss = loss_func(train_pred_output, train_Y)
-                model_train_loss.append(train_loss.item())
-                train_pred_label = eval.predict_labels(train_pred_output)
-                _, current_train_accuracy = eval.train_evaluation(train_pred_label, train_Y)
-                model_train_accuracy.append(current_train_accuracy)
+                this_epoch_train_loss = loss_func(train_pred_output, train_Y)
+                model_train_loss.append(this_epoch_train_loss.item())
 
+                # determine convergence
+                if (i % self.time_period == 0) and (len(model_train_loss) > 0):
+                    pre_loss = model_train_loss[-self.time_period]
+                    if this_epoch_train_loss.item() < pre_loss:
+                        delta = pre_loss - this_epoch_train_loss.item()
+                        if delta < 0.01 * pre_loss:
+                            print(str(i) + 'converge')
+                            break
+                    else:
+                        print('loss increase')
+                        break
 
                 # test
                 test_pred_output = net(test_X)
                 # record test loss and accuracy
                 test_loss = loss_func(test_pred_output, test_Y)
                 model_test_loss.append(test_loss.item())
-                test_pred_label = eval.predict_labels(test_pred_output)
-                _, current_test_accuracy = eval.train_evaluation(test_pred_label, test_Y)
-                model_test_accuracy.append(current_test_accuracy)
 
-                # back prop !!!!!
+                # back prop
                 # clear gradients for next train
                 optimiser.zero_grad()
                 # perform backward pass
-                train_loss.backward()
-                # call the step function on an Optimiser makes an update to its
-                # parameters
+                this_epoch_train_loss.backward()
+                # call the step function on an Optimiser makes an update to its parameters
                 optimiser.step()
 
             self.train_loss_12.append(model_train_loss)
             self.test_loss_12.append(model_test_loss)
-            self.train_accuracy_12.append(model_train_accuracy)
-            self.test_accuracy_12.append(model_test_accuracy)
 
             print('Now predicting testing set:')
 
             # record final results of the model
-            prediction_test = net(test_X)
-            final_model_pred_label = eval.predict_labels(prediction_test)
-            test_loss = loss_func(prediction_test, test_Y)
-            self.all_final_pred_ys.append(final_model_pred_label)
-
-            print('truth y')
-            print(test_Y)
-            print('pred y')
-            print(final_model_pred_label)
-            print('The loss for testing set is: ' + str(test_loss))
+            test_last_layer = net(test_X)
+            final_model_pred_label = eval.predict_labels(test_last_layer)
+            self.all_final_pred_label.append(final_model_pred_label)
 
     def final_evaluation(self):
-        combine = eval.combine_pred_real_labels(self.all_final_pred_ys, self.all_real_ys)
+        combine = eval.combine_pred_real_labels(self.all_final_pred_label, self.all_real_label)
         eval_measures, overall_accuracy = eval.evaluation(combine)
         print('evaluation for all model')
         print(eval_measures)
@@ -147,31 +155,19 @@ class FFNNModelComparison(object):
         return eval_measures, overall_accuracy
 
     def visualization(self):
-        for i in range(self.num_participants):
+        for i in range(self.NUM_MODEL):
             train_loss = self.train_loss_12[i]
             test_loss = self.test_loss_12[i]
-            train_accuracy = self.train_accuracy_12[i]
-            test_accuracy = self.test_accuracy_12[i]
 
             # Plot training loss
-            fig = plt.figure(figsize=(8, 10))
-            a0 = fig.add_subplot(211)
-            a1 = fig.add_subplot(212)
+            plt.figure()
 
             # display training loss and testing loss
-            a0.set_title('training loss and testing loss during training')
-            a0.set_xlabel('epoch')
-            a0.set_ylabel('CrossEntropy loss')
-            a0.plot(train_loss, label='train loss')
-            a0.plot(test_loss, label='test loss')
-            a0.legend()
-
-            # display training accuracy and testing accuracy
-            a1.set_title('accuracy during training')
-            a1.set_xlabel('epoch')
-            a1.set_ylabel('accuracy')
-            a1.plot(train_accuracy, label='train accuracy')
-            a1.plot(test_accuracy, label='test accuracy')
-            a1.legend()
+            plt.title('training loss and testing loss during training')
+            plt.xlabel('epoch')
+            plt.ylabel('CrossEntropy loss')
+            plt.plot(train_loss, label='train loss')
+            plt.plot(test_loss, label='test loss')
+            plt.legend()
             plt.show()
 

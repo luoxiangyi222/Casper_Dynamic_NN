@@ -2,6 +2,10 @@
 # Author: Xiangyi Luo (u6162693)
 # Time: May 2020
 
+"""
+This module implemented the Casper model
+"""
+
 
 import torch
 import torch.nn as nn
@@ -23,6 +27,7 @@ class SARPROP(object):
     """
     THis class is a optimizer for SA RPROP
     """
+
     def __init__(self,
                  params: list,
                  region_flag: int,  # determine initial step
@@ -36,22 +41,28 @@ class SARPROP(object):
         self.etas = etas
         self.step_sizes = step_sizes
 
-        # parameter
+        # hyper parameter
         self.k1 = 1e-4
         self.T = 0.01
-        self.state = {}
+        self.state = {}  # store state, for instance, previous gradient, step_size
         for i in range(len(params)):
             self.state[i] = {}
         self.step_counter = 0
 
     def zero_grad(self):
-        # set all grad to zero
+        """
+        set all grad to zero
+        @return:
+        """
         if self.params:
             for par_id, p in enumerate(self.params):
                 p.grad.zero_()
 
     def step(self):
-        # need to first generate a random new point in the space
+        """
+        Update state and weight
+
+        """
         self.step_counter += 1
 
         for par_id, p in enumerate(self.params):
@@ -88,7 +99,7 @@ class SARPROP(object):
 
             # for dir<0, dfdx=0
             # for dir>=0 dfdx=dfdx
-            # SA_grad = SA_grad.clone(memory_format=torch.preserve_format)
+            SA_grad = SA_grad.clone(memory_format=torch.preserve_format)
             # SA_grad[check_same_sign.lt(0)] = step_size_min
             SA_grad[step.eq(etaminus)] = 0
 
@@ -105,6 +116,7 @@ class HiddenNeuron(object):
     This class represents a local structure in Casper network,
     A hidden Neuron includes weight in, sum of all input, and one output
     """
+
     def __init__(self,
                  num_in: int,
                  ):
@@ -151,9 +163,9 @@ class CasPerModel(object):
         self.test_y = test_data[:, 0].long()
 
         self.all_train_loss = []  # each element contains all training loss in one training for one hidden neuron
-        self.all_test_loss = []   # each element contains all testing loss in one training  for one hidden neuron
+        self.all_test_loss = []  # each element contains all testing loss in one training  for one hidden neuron
         self.all_train_accuracy = []  # each element contains all training loss in one training for one hidden neuron
-        self.all_test_accuracy = []   # each element contains all testing loss in one training  for one hidden neuron
+        self.all_test_accuracy = []  # each element contains all testing loss in one training  for one hidden neuron
 
         # neurons list, store all added hidden neurons
         self.hidden_neurons = []
@@ -165,7 +177,6 @@ class CasPerModel(object):
         self.first_train()  # the initial Casper model contains only one hidden neuron
 
         for old_hn_num in range(1, self.NUM_HIDDEN_NEURON):
-            print('Attention: ' + str(old_hn_num) + '   hidden neurons involved')
 
             # create new neuron and add it into network
             new_h_neuron = HiddenNeuron(input_d + old_hn_num)
@@ -175,6 +186,8 @@ class CasPerModel(object):
 
             # re-train the network
             self.train(new_h_neuron, new_neuron_out_weight)
+
+            # print('Attention: ' + str(old_hn_num+1) + '   hidden neurons involved')
 
     def first_train(self):
         """
@@ -196,7 +209,6 @@ class CasPerModel(object):
         i = 0
         while True:
             # forward
-            # print(str(i)+'        ||||||||||||')
             coming_layer = self.train_x
             hn_out = first_hidden.compute_y_out(coming_layer)
             coming_layer = torch.cat((coming_layer, hn_out), 1)
@@ -209,17 +221,13 @@ class CasPerModel(object):
                 previous_loss = this_neuron_train_loss[-time_period]
 
                 if train_loss < previous_loss:  # loss must decrease
-                    # print('=====')
-                    # print(previous_loss)
-                    # print(train_loss.item())
+
                     delta = previous_loss - train_loss.item()  # always positive
-                    print(delta)
                     if delta < 0.01 * previous_loss:
-                        # print('TTTTTTTTT')
-                        print('first train converge at loop: ' + str(i))
+                        # print('first train converge at loop: ' + str(i))
                         break
                 else:
-                    print('loss increase!!!')
+                    # print('loss increase!!!')
                     break
 
             # record train loss
@@ -283,10 +291,10 @@ class CasPerModel(object):
                 if this_epoch_train_loss < pre_loss:
                     delta = pre_loss - this_epoch_train_loss
                     if delta < 0.01 * pre_loss:
-                        print(str(i) + 'break')
+                        # print(str(i) + 'break')
                         break
                 else:
-                    print('loss increase')
+                    # print('loss increase')
                     break
 
             # record train loss
@@ -340,7 +348,6 @@ class CasPerModel(object):
     def get_test_output_loss(self):
         """
         Use test data and current network (not necessary fully trained) to give last layer output and gives test loss
-        Need run forward at before call this function
         @return: last layer output, current test loss
 
         """
@@ -357,7 +364,24 @@ class CasPerModel(object):
 
         return current_test_output, current_test_loss
 
+    def model_eval(self):
+        """
+        After fully trained ,can be used to evaluate this model
+        @return: precision, recall, F1, accuracy
+        """
+        test_output, _ = self.get_test_output_loss()
+        pred_y = eval.predict_labels(test_output)
+        combine = eval.combine_pred_real_labels(pred_y, self.test_y)
+        eval_measures, accuracy = eval.evaluation(combine)
+        print(eval_measures)
+        print(accuracy)
+        return eval_measures, accuracy
+
     def display_training_process(self):
+        """
+        Plot both training loss and testing loss, the title gives model id and the number of hidden units in network
+        @return:
+        """
         title = 'model id: ' + str(self.id) + ' num_hidden_neurons: ' + str(self.NUM_HIDDEN_NEURON)
 
         train_list = [item for sublist in self.all_train_loss for item in sublist]
@@ -368,14 +392,11 @@ class CasPerModel(object):
         timestamp_value = []
         critical_time = 0
         for i, li in enumerate(self.all_train_loss):
-            if i < len(self.all_train_loss)-1:
+            if i < len(self.all_train_loss) - 1:
                 critical_time += len(li)
-                critical_val = self.all_train_loss[i+1][0]
+                critical_val = self.all_train_loss[i + 1][0]
                 timestamp.append(critical_time)
                 timestamp_value.append(critical_val.item())
-
-        print(timestamp)
-        print(timestamp_value)
 
         # Plot training loss and testing loss
         plt.figure()
@@ -389,73 +410,6 @@ class CasPerModel(object):
         plt.show()
 
 
-
-
-
-
-#################################################################
-# depression data
-#################################################################
-
-def diff(first, second):
-    second = set(second)
-    return [item for item in first if item not in second]
-
-train_data_list, test_data_list = dp_data.leave_one_participant_out(dp_data.all_ft_data, 2)
-
-train_data = train_data_list[0]
-print(train_data.shape)
-test_data = test_data_list[0]
-to_drop, drop_data = data_pre.remove_colinear_features(train_data, 0.65)
-to_drop = [x+1 for x in to_drop]
-to_keep = diff(range(train_data.shape[1]-1), to_drop)
-
-print(to_drop)
-
-train_data = train_data[:, to_keep]
-test_data = test_data[:, to_keep]
-train_data = data_pre.lda_feature_selection(train_data, 3)
-test_data = data_pre.lda_feature_selection(test_data, 3)
-
-# add bias
-train_data = data_pre.add_bias_layer(train_data)
-test_data = data_pre.add_bias_layer(test_data)
-input_size = train_data.shape[1] - 1
-
-#################################################################
-# artificial data
-#################################################################
-# SEED = 0
-#
-# torch.manual_seed(SEED)
-# torch.cuda.manual_seed(SEED)
-#
-# train_data = torch.randn((500, 30)).float()
-# train_data_label = torch.randint(0, 3, (500, 1)).float()
-#
-# test_data = torch.randn((50, 30)).float()
-# test_data_label = torch.randint(0, 3, (50, 1)).float()
-#
-# train_data = torch.cat([train_data_label, train_data], dim=1)
-# test_data = torch.cat([test_data_label, test_data], dim=1)
-
-
-casper = CasPerModel(input_size, 4, train_data=train_data, test_data=test_data, num_hidden=5, model_id=0)
-casper.display_training_process()
-# print(len(casper.all_train_loss))
-# train_loss = casper.all_train_loss
-# test_loss = casper.all_test_loss
-#
-# train_list = [item for sublist in train_loss for item in sublist]
-# test_list = [item for sublist in test_loss for item in sublist]
-#
-# plt.figure()
-# plt.plot(train_list)
-# plt.plot(test_list)
-# plt.show()
-
-
-
 # ##############################################################################################
 # Run CasPer model on data and Evaluation
 # ##############################################################################################
@@ -465,7 +419,7 @@ class CasPerModelComparison(object):
                  data: torch.tensor,
                  use_lda: bool,
                  normalization_flag,
-                 hidden_num=10
+                 hidden_num=1
                  ):
         self.normalization_flag = normalization_flag
         self.train_data_list, self.test_data_list = dp_data.leave_one_participant_out(data, self.normalization_flag)
@@ -478,70 +432,65 @@ class CasPerModelComparison(object):
         # all train and test loss for 12 different models
         self.loss_12_train = []
         self.loss_12_test = []
-        self.train_12_accuracy = []
-        self.test_12_accuracy = []
 
         # all pred and real labes for 12 different models
         self.all_models_pred_labels = []
         self.all_models_real_labels = data[:, 0].long()
 
-        self.train()
+        self.train_models()
 
-    def train(self):
+    def train_models(self):
+        """
+        Train 12 different model and collect information
+        @return:
+        """
         all_model_labels = []
-        for p in range(self.NUM_MODEL):  # each loop is a model
+        for m_id in range(self.NUM_MODEL):  # each loop trains a model
 
-            train_data = self.train_data_list[p]
-            test_data = self.test_data_list[p]
+            train_data = self.train_data_list[m_id]
+            test_data = self.test_data_list[m_id]
 
-            # add bias
+            # add bias layer
             train_data = data_pre.add_bias_layer(train_data)
             test_data = data_pre.add_bias_layer(test_data)
-            input_size = train_data.shape[1] - 1
 
             # pre-processing of train and test data
             # LDA
             if self.use_lda:
-                train_data = data_pre.remove_colinear_features(train_data, 0.9)
+                # use PCA before LDA to remove collinear variables
+                train_data, test_data = data_pre.pca(train_data, test_data, 10)
+
                 train_data = data_pre.lda_feature_selection(train_data, 3)
-                test_data = data_pre.remove_colinear_features(test_data, 0.9)
                 test_data = data_pre.lda_feature_selection(test_data, 3)
 
-            model = CasPerModel(input_size, 4, train_data=train_data, test_data=test_data, num_hidden=self.NUM_HIDDEN)
+            input_size = train_data.shape[1] - 1
+            model = CasPerModel(input_size, 4, train_data=train_data, test_data=test_data,
+                                num_hidden=self.NUM_HIDDEN, model_id=m_id)
 
             # store all losses for visualisation
             self.loss_12_train.append(model.all_train_loss)
             self.loss_12_test.append(model.all_test_loss)
 
-            test_pred_output, test_loss = model.get_test_output_loss_accuracy()
-            this_model_pred_label = eval.predict_labels(test_pred_output)
+            test_output, _ = model.get_test_output_loss()
+            this_model_pred_label = eval.predict_labels(test_output)
             all_model_labels.append(this_model_pred_label)
 
-            print('Model No. ' + str(p) + 'The loss for testing set is: ' + str(test_loss))
+            # print evaluation for a model
+            print('------model ' + str(m_id))
+            # model.model_eval()
+            # model.display_training_process()
 
         self.all_models_pred_labels = torch.cat(all_model_labels)
 
     def final_evaluation(self):
-        combine = evaluation.combine_pred_real_labels(self.all_models_pred_labels, self.all_models_real_labels)
-        eval_measures, overall_accuracy = evaluation.evaluation(combine)
+        """
+        This function gives overall evaluation of the 12 models.
+        @return: first: measures for each class, second: average accuracy
+        """
+        combine = eval.combine_pred_real_labels(self.all_models_pred_labels, self.all_models_real_labels)
+        eval_measures, overall_accuracy = eval.evaluation(combine)
         print(eval_measures)
         print(overall_accuracy)
         return eval_measures, overall_accuracy
-
-    def visualization(self):
-
-        for i in range(self.NUM_MODEL):
-            all_train_loss = self.loss_12_train[i]
-            all_eval_loss = self.loss_12_test[i]
-
-            # Plot training loss
-            plt.figure()
-            plt.title(' training loss and testing loss during training')
-            plt.xlabel('epoch')
-            plt.ylabel('CrossEntropy loss')
-            plt.plot(all_train_loss, label='training loss')
-            plt.plot(all_eval_loss, label='testing loss')
-            plt.legend()
-            plt.show()
 
 
