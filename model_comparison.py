@@ -39,12 +39,11 @@ To run model just uncomment related section!!!!!!!!!!!!!
 # all_accuracy_list = []
 # time_cost_list = []
 # for hn in range(1, 20):
-#     num_hidden = hn * 5
-#     print('Hidden units: ' + str(num_hidden))
-#     ffnn_allfeature_result_file.write('hidden units: ' + str(num_hidden) + '\n')
+#     print('Hidden units: ' + str(hn))
+#     ffnn_allfeature_result_file.write('hidden units: ' + str(hn) + '\n')
 #     t1 = time.time()
-#     ffnn_compare = ffnn.FFNNModelComparison(dp_data.all_ft_data, use_lda=False, learning_rate=0.001, normalization_flag=2,
-#                                             epochs=3000, hidden_num=num_hidden)
+#     ffnn_compare = ffnn.FFNNModelComparison(dp_data.all_ft_data, use_lda=False, learning_rate=0.01, normalization_flag=2,
+#                                             epochs=3000, hidden_num=hn)
 #
 #     t2 = time.time()
 #     time_cost = t2 - t1
@@ -72,12 +71,12 @@ ffnn_allfeature_LDA_result_file.write('LDA: True  \n')
 all_accuracy_list = []
 time_cost_list = []
 for hn in range(1, 20):
-    num_hidden = hn * 5
-    print('Hidden units: ' + str(num_hidden))
-    ffnn_allfeature_LDA_result_file.write('hidden units: ' + str(num_hidden) + '\n')
+
+    print('Hidden units: ' + str(hn))
+    ffnn_allfeature_LDA_result_file.write('hidden units: ' + str(hn) + '\n')
     t1 = time.time()
     ffnn_compare = ffnn.FFNNModelComparison(dp_data.all_ft_data, use_lda=True, learning_rate=0.01, normalization_flag=2,
-                                            epochs=3000, hidden_num=num_hidden)
+                                            epochs=3000, hidden_num=hn)
     # ffnn_compare.visualization()
     t2 = time.time()
     time_cost = t2 - t1

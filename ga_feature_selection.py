@@ -2,7 +2,7 @@
 # Author: Xiangyi Luo (u6162693)
 # Time: May 2020
 
-from GA_Abstract import GA
+from ga_abstract import GA
 import numpy as np
 import my_nn_model as ffnn
 import depression_data as dp_data
