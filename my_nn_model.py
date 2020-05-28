@@ -35,7 +35,7 @@ class FFNNModelComparison(object):
                  learning_rate,
                  normalization_flag,
                  epochs,
-                 hidden_num=10
+                 hidden_num
                  ):
         self.data = data
         self.use_lda = use_lda
@@ -74,6 +74,7 @@ class FFNNModelComparison(object):
         """
 
         for m_id in range(self.NUM_MODEL):
+            print(str(m_id)+'model')
             train_data = self.train_data_list[m_id]
             test_data = self.test_data_list[m_id]
 
@@ -87,17 +88,17 @@ class FFNNModelComparison(object):
                 test_data = data_pre.lda_feature_selection(test_data, 3)
                 
             train_X = train_data[:, 1:]
-            train_Y = train_data[:, 0]
+            train_Y = train_data[:, 0].long()
             
             test_X = test_data[:, 1:]
-            test_Y = test_data[:, 0]
+            test_Y = test_data[:, 0].long()
 
             input_size = train_data.shape[1] - 1
 
             # build new net
             net = OneHiddenNN(input_size, self.NUM_HIDDEN, self.output_size)
             loss_func = nn.CrossEntropyLoss()
-            optimiser = torch.optim.Adam(net.parameters(), lr=self.lr, weight_decay=0.01)
+            optimiser = torch.optim.Adam(net.parameters(), lr=self.lr)
 
             # store all losses for visualisation
             model_train_loss = []
@@ -111,7 +112,7 @@ class FFNNModelComparison(object):
                 model_train_loss.append(this_epoch_train_loss.item())
 
                 # determine convergence
-                if (i % self.time_period == 0) and (len(model_train_loss) > 0):
+                if (i % self.time_period == 0) and (i > 0):
                     pre_loss = model_train_loss[-self.time_period]
                     if this_epoch_train_loss.item() < pre_loss:
                         delta = pre_loss - this_epoch_train_loss.item()
@@ -120,6 +121,7 @@ class FFNNModelComparison(object):
                             break
                     else:
                         print('loss increase')
+
                         break
 
                 # test
@@ -136,21 +138,24 @@ class FFNNModelComparison(object):
                 # call the step function on an Optimiser makes an update to its parameters
                 optimiser.step()
 
+
+
             self.train_loss_12.append(model_train_loss)
             self.test_loss_12.append(model_test_loss)
-
-            print('Now predicting testing set:')
 
             # record final results of the model
             test_last_layer = net(test_X)
             final_model_pred_label = eval.predict_labels(test_last_layer)
             self.all_final_pred_label.append(final_model_pred_label)
 
+        self.all_final_pred_label = torch.cat(self.all_final_pred_label)
+
     def final_evaluation(self):
         combine = eval.combine_pred_real_labels(self.all_final_pred_label, self.all_real_label)
         eval_measures, overall_accuracy = eval.evaluation(combine)
         print('evaluation for all model')
-        print(eval_measures)
+        # print(eval_measures)
+        print('accuracy')
         print(overall_accuracy)
         return eval_measures, overall_accuracy
 
