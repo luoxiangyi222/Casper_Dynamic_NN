@@ -10,27 +10,34 @@ class GA(object):
 
     def __init__(self,
                  dna_size,
-                 pop_size=10,
+                 pop_size,
                  ):
         self.POP_SIZE = pop_size
 
         self.DNA_SIZE = dna_size
 
+        self.died_pool = []  # record the used DNA, we do not want to reproduce them again
+
         self.old_candidate_pool = {}  # key: chromosome, value: select probability (initial zero)
+        self.old_candidate_eval = {}
 
         self.new_candidate_pool = {}
 
-        self.frame_size = 4
-        self.hall_of_frame = {}  # max size 20, worst will be killed
+        self.hall_of_fame = {}  # max size 20, worst will be killed
+        self.fame_size = 20
+        self.fame_eval = {}  # store evaluation measure matrix for best two
+        self.fame_average_fit_list = []  # record average fit for each generation
 
-        self.CROSS_RATE = 0.8
-        self.MUTATE_RATE = 0.002
-
-        self.average_fit_list = []
-
-        self.chosen_solution = None
+        # model output
+        self.best_fame = None
+        self.best_fame_eval = None
 
         self.generation_counter = 0
+
+        # rate
+        self.CROSS_RATE = 0.8
+        self.MUTATE_RATE = (1 / 240) + 0.11375   # decrease exponentially with generation counter
+
         self.first_generate()
         self.evolve()
 
@@ -45,26 +52,24 @@ class GA(object):
         int_array = np.array(str_of_array).astype(np.int)
         return int_array
 
-    def get_average_fitness(self):
-        fitness_vals = list(self.old_candidate_pool.values())
-        average_fit = np.average(fitness_vals)
-        return average_fit
+    def update_mutate_rate(self):
+        self.MUTATE_RATE = (1 / 240) + 0.11375 / (2 ** self.generation_counter)
+
 
     def check_terminate(self):
         """
-        Check last 5 iterations, if changes are all small, then terminate
+        Check last 3 iterations, if changes are all small, then terminate
         @return:
         """
-        if len(self.average_fit_list) < 6:
+        if len(self.fame_average_fit_list) < 4:
             return False
         else:
-            last_five = np.array(self.average_fit_list[-5:])
-            shift_five = np.array(self.average_fit_list[-6:-1])
+            last_five = np.array(self.fame_average_fit_list[-3:])
+            shift_five = np.array(self.fame_average_fit_list[-4:-1])
 
-            diff = abs(last_five - shift_five) < 0.1
+            diff = abs(last_five - shift_five) < 0.005
             no_change = np.sum(diff)
-            return no_change >= 5
-
+            return no_change >= 3
 
     def reset_new_pool(self):
         self.new_candidate_pool = {}
@@ -75,11 +80,11 @@ class GA(object):
         """
         self.old_candidate_pool = {k: v for k, v in sorted(self.old_candidate_pool.items(), key=lambda item: item[1])}
 
-    def rank_frame(self):
+    def rank_fame(self):
         """
-        @return: sorted frame in ascending order
+        @return: sorted fame in ascending order
         """
-        self.hall_of_frame = {k: v for k, v in sorted(self.hall_of_frame.items(), key=lambda item: item[1])}
+        self.hall_of_fame = {k: v for k, v in sorted(self.hall_of_fame.items(), key=lambda item: item[1])}
 
     def rank_based_select_from_old_pool(self):
         """
@@ -101,32 +106,47 @@ class GA(object):
 
         return female_parent
 
-    def update_frame(self):
+    def record_fame_average_fitness(self):
+        fitness_vals = list(self.hall_of_fame.values())
+        average_fit = np.average(fitness_vals)
+        self.fame_average_fit_list.append(average_fit)
+        return average_fit
+
+    def update_fame(self):
         """
-        Insert best two individual into hall of frame
-        @param best_two:
+        Insert best two individual into hall of fame
         @return:
         """
         # insert best 2 in the hall of fame
         best_two = list(self.old_candidate_pool.items())[-2:]
+        self.hall_of_fame.update(best_two)
 
-        self.hall_of_frame.update(best_two)
-        self.rank_frame()
-
+        # sort them and record average
+        self.rank_fame()
         # check overflow
-        if len(self.hall_of_frame) > self.frame_size:
-            self.hall_of_frame = dict(list(self.hall_of_frame.items())[-self.frame_size:])
+        if len(self.hall_of_fame) > self.fame_size:
+            self.hall_of_fame = dict(list(self.hall_of_fame.items())[-self.fame_size:])
+        # record average
+        self.record_fame_average_fitness()
 
-        print('-----FRAME---------')
-        print(self.hall_of_frame)
+        # record evaluation measures of best two
+        for _, item in enumerate(best_two):
+            k, _ = item
+            self.fame_eval[k] = self.old_candidate_eval[k]
+
+        # clear old pool eval
+        self.reset_old_eval()
+
+        print('----- CURRENT FAME -----')
+        print(self.hall_of_fame.values())
 
     def select_parent(self):
         """
         Select parent to generate offsprings
         @return: a pair of parent
         """
-        # select one parent in frame
-        father_str, _ = random.choice(list(self.hall_of_frame.items()))
+        # select one parent in fame
+        father_str, _ = random.choice(list(self.hall_of_fame.items()))
         father_arr = self.str_to_array(father_str)
 
         # select one parent in current pool based on rank
@@ -186,18 +206,32 @@ class GA(object):
         """
         @return:
         """
+        print('First generate')
+        print('Counter')
+        print(self.generation_counter)
+
         for i in range(self.POP_SIZE):  # random generate candidate
             chromosome = np.random.choice([0, 1], size=(self.DNA_SIZE,))
             self.old_candidate_pool[str(chromosome)] = 0
 
         self.fitness_function()
         self.rank_candidate()
-        self.update_frame()
+        self.update_fame()
 
-        average_fit = self.get_average_fitness()
-        self.average_fit_list.append(average_fit)
+        print('Average fame fit')
+        print(self.fame_average_fit_list[-1])
 
         self.generation_counter += 1
+        self.update_mutate_rate()
+
+        # record current pool to died pool
+        self.update_died_pool()
+
+    def update_died_pool(self):
+        self.died_pool += list(self.old_candidate_pool.keys())
+
+    def reset_old_eval(self):
+        self.old_candidate_eval = {}
 
     def reproduce(self):
         """
@@ -209,26 +243,25 @@ class GA(object):
             fa, ma = self.select_parent()
             children = self.get_children(fa, ma)
 
+            children_names = []
+
             # add children to new pool
             for _, c in enumerate(children):
 
-                # check new pool do not have repeat children
-                new_keys_list = list(self.new_candidate_pool.keys())
-                if len(new_keys_list) > 0:
-
-                    if str(c) in new_keys_list:
-                        break
-
-                self.new_candidate_pool[str(c)] = 0
+                # check c did not in died pool and did not already added before
+                child_str = str(c)
+                if child_str not in self.died_pool:
+                    if child_str not in children_names:
+                        # add into new pool
+                        self.new_candidate_pool[str(c)] = 0
 
     def evolve(self):
         finish = False
         while not finish:
             print('========================================================')
             print('Counter')
-            print(self.generation_counter)
-            print('Average fit')
-            print(self.average_fit_list[-1])
+
+            print(self.fame_average_fit_list[-1])
 
             # create new population
             self.reproduce()
@@ -238,24 +271,32 @@ class GA(object):
 
             # compute fitness values
             self.fitness_function()
-            self.rank_candidate()
-            self.update_frame()
+
+            self.rank_candidate()  # sort them
+            self.update_fame()
             self.reset_new_pool()
 
-            # record average fit
-            average_fit = self.get_average_fitness()
-            self.average_fit_list.append(average_fit)
+            print(self.generation_counter)
+            print('Average fame fit')
 
+            # update mutate
             self.generation_counter += 1
+            self.update_mutate_rate()
+
+            self.update_died_pool()
 
             # check termination
             finish = self.check_terminate()
 
         print('Evolution finish')
-        print(self.average_fit_list)
-        self.chosen_solution = list(self.old_candidate_pool.items())[-2:]
-        print(self.chosen_solution)
-        return self.chosen_solution
+
+        self.best_fame = list(self.hall_of_fame.items())[-1]
+        self.best_fame_eval = self.fame_eval[self.best_fame[0]]
+
+        print(self.fame_average_fit_list)
+        print(self.best_fame)
+        print(self.best_fame_eval)
+        return self.best_fame, self.best_fame_eval
 
     # @abstractmethod
     def fitness_function(self):
@@ -264,11 +305,12 @@ class GA(object):
         Comopute fitness for each individual in old_candidate_pool
         @return: update old_fitness_list
         """
-        # model_compare = ffnn.FFNNModelComparison(self.data, True, 0.001, 2, 3000, 5)
+
         # for i, dna in enumerate(self.old_candidate_pool.keys()):
         #     dna_arr = self.str_to_array(dna)
         #     fitness = np.sum(dna_arr)
         #     self.old_candidate_pool[dna] = fitness
+
         pass
 
     @staticmethod
@@ -283,5 +325,7 @@ class GA(object):
             if array[i] == 1:
                 index.append(i)
         index = [0] + [x+1 for x in index]
-        return index
+        return np.array(index)
 
+
+# ga = GA(5, 10)

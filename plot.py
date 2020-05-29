@@ -8,6 +8,12 @@ This module was used to plot diagrams in the report
 
 import numpy as np
 import matplotlib.pyplot as plt
+b=1
+a = 3 * b
+
+for i in range(5):
+    b += 1
+    print(a)
 
 x_ticks = range(1, 19)
 

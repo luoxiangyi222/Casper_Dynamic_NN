@@ -77,3 +77,13 @@ def evaluation(pred_real_y: torch.tensor):
     N = len(pred_real_y)
     overall_accuracy = len(match) / N
     return eval_measures, overall_accuracy
+
+
+# test_code
+
+# pred_y = torch.tensor(np.array([0, 1, 3, 1, 1, 3, 1, 2]))
+# real_y = torch.tensor(np.array([0, 0, 1, 1, 2, 2, 3, 3]))
+# combine = combine_pred_real_labels(pred_y, real_y)
+# eval_measures, accuracy = evaluation(combine)
+# print(eval_measures)
+# print(accuracy)

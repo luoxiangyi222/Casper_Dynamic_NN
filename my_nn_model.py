@@ -74,7 +74,7 @@ class FFNNModelComparison(object):
         """
 
         for m_id in range(self.NUM_MODEL):
-            print(str(m_id)+'model')
+            # print(str(m_id)+'model')
             train_data = self.train_data_list[m_id]
             test_data = self.test_data_list[m_id]
 
@@ -117,10 +117,10 @@ class FFNNModelComparison(object):
                     if this_epoch_train_loss.item() < pre_loss:
                         delta = pre_loss - this_epoch_train_loss.item()
                         if delta < 0.01 * pre_loss:
-                            print(str(i) + 'converge')
+                            # print(str(i) + 'converge')
                             break
                     else:
-                        print('loss increase')
+                        # print('loss increase')
 
                         break
 
@@ -153,10 +153,10 @@ class FFNNModelComparison(object):
     def final_evaluation(self):
         combine = eval.combine_pred_real_labels(self.all_final_pred_label, self.all_real_label)
         eval_measures, overall_accuracy = eval.evaluation(combine)
-        print('evaluation for all model')
+        # print('evaluation for all model')
         # print(eval_measures)
-        print('accuracy')
-        print(overall_accuracy)
+        # print('accuracy')
+        # print(overall_accuracy)
         return eval_measures, overall_accuracy
 
     def visualization(self):

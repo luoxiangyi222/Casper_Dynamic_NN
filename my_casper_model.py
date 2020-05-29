@@ -476,7 +476,7 @@ class CasPerModelComparison(object):
             all_model_labels.append(this_model_pred_label)
 
             # print evaluation for a model
-            print('------model ' + str(m_id))
+            # print('------model ' + str(m_id))
             # model.model_eval()
             # model.display_training_process()
 
@@ -489,8 +489,8 @@ class CasPerModelComparison(object):
         """
         combine = eval.combine_pred_real_labels(self.all_models_pred_labels, self.all_models_real_labels)
         eval_measures, overall_accuracy = eval.evaluation(combine)
-        print(eval_measures)
-        print(overall_accuracy)
+        # print(eval_measures)
+        # print(overall_accuracy)
         return eval_measures, overall_accuracy
 
 
