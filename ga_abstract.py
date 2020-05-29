@@ -24,7 +24,7 @@ class GA(object):
         self.new_candidate_pool = {}
 
         self.hall_of_fame = {}  # max size 20, worst will be killed
-        self.fame_size = 20
+        self.fame_size = 10
         self.fame_eval = {}  # store evaluation measure matrix for best two
         self.fame_average_fit_list = []  # record average fit for each generation
 
@@ -67,7 +67,7 @@ class GA(object):
             last_five = np.array(self.fame_average_fit_list[-3:])
             shift_five = np.array(self.fame_average_fit_list[-4:-1])
 
-            diff = abs(last_five - shift_five) < 0.005
+            diff = abs(last_five - shift_five) < 0.001
             no_change = np.sum(diff)
             return no_change >= 3
 
@@ -206,6 +206,7 @@ class GA(object):
         """
         @return:
         """
+        print('========================================================')
         print('First generate')
         print('Counter')
         print(self.generation_counter)
@@ -260,8 +261,7 @@ class GA(object):
         while not finish:
             print('========================================================')
             print('Counter')
-
-            print(self.fame_average_fit_list[-1])
+            print(self.generation_counter)
 
             # create new population
             self.reproduce()
@@ -276,8 +276,8 @@ class GA(object):
             self.update_fame()
             self.reset_new_pool()
 
-            print(self.generation_counter)
             print('Average fame fit')
+            print(self.fame_average_fit_list[-1])
 
             # update mutate
             self.generation_counter += 1
@@ -296,6 +296,13 @@ class GA(object):
         print(self.fame_average_fit_list)
         print(self.best_fame)
         print(self.best_fame_eval)
+
+        print('Number of features: ')
+        arr = self.str_to_array(self.best_fame[0])
+        num = np.sum(arr)
+        print(num)
+
+
         return self.best_fame, self.best_fame_eval
 
     # @abstractmethod

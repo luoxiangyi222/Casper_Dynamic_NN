@@ -21,36 +21,38 @@ class GAFeatureSelectionFFNN(GA):
         GA.__init__(self, dna_size, pop_size)
 
     def fitness_function(self):
-
         for _, dna in enumerate(self.old_candidate_pool.keys()):
             dna_arr = self.str_to_array(dna)
             to_keep = self.dna_to_index(dna_arr)
-            keep_data = self.data[:, to_keep]
-            ffnn_compare = ffnn.FFNNModelComparison(keep_data,
-                                                    use_lda=False,
-                                                    learning_rate=0.01,
-                                                    normalization_flag=2,
-                                                    epochs=3000,
-                                                    hidden_num=self.HIDDEN_NUM)
+            print(to_keep)
+            if len(to_keep) < 3:
+                self.old_candidate_pool[dna] = 0
+                self.old_candidate_eval[dna] = None
+            else:
+                keep_data = self.data[:, to_keep]
+                ffnn_compare = ffnn.FFNNModelComparison(keep_data,
+                                                        use_lda=False,
+                                                        learning_rate=0.01,
+                                                        normalization_flag=0,
+                                                        epochs=3000,
+                                                        hidden_num=self.HIDDEN_NUM)
 
-            overall_eval_measure, overall_accuracy = ffnn_compare.final_evaluation()
+                overall_eval_measure, overall_accuracy = ffnn_compare.final_evaluation()
 
-            self.old_candidate_pool[dna] = overall_accuracy
-            self.old_candidate_eval[dna] = overall_eval_measure
-
+                self.old_candidate_pool[dna] = overall_accuracy
+                self.old_candidate_eval[dna] = overall_eval_measure
 
 
 class GAFeatureSelectionCasper(GA):
     def __init__(self,
-                 pop_size,
                  dna_size,
+                 pop_size,
                  num_hidden_units,
                  data):
-
         self.HIDDEN_NUM = num_hidden_units
         self.data = data
 
-        super(GAFeatureSelectionCasper, self).__init__(pop_size, dna_size)
+        super(GAFeatureSelectionCasper, self).__init__(dna_size, pop_size)
 
     def fitness_function(self):
         """
@@ -61,23 +63,32 @@ class GAFeatureSelectionCasper(GA):
         for _, dna in enumerate(self.old_candidate_pool.keys()):
             dna_arr = self.str_to_array(dna)
             to_keep = self.dna_to_index(dna_arr)
-            keep_data = self.data[:, to_keep]
-            casper_compare = casper.CasPerModelComparison(data=keep_data,
-                                                          use_lda=False,
-                                                          normalization_flag=2,
-                                                          hidden_num=self.HIDDEN_NUM)
+            print(to_keep)
+            if len(to_keep) < 3:
+                print('!!!!!')
+                self.old_candidate_pool[dna] = 0
+                self.old_candidate_eval[dna] = None
+            else:
+                keep_data = self.data[:, to_keep]
+                casper_compare = casper.CasPerModelComparison(data=keep_data,
+                                                              use_lda=False,
+                                                              normalization_flag=0,
+                                                              hidden_num=self.HIDDEN_NUM)
 
-            overall_eval_measure, overall_accuracy = casper_compare.final_evaluation()
+                overall_eval_measure, overall_accuracy = casper_compare.final_evaluation()
 
-            self.old_candidate_pool[dna] = overall_accuracy
-            self.old_candidate_eval[dna] = overall_eval_measure
+                self.old_candidate_pool[dna] = overall_accuracy
+                self.old_candidate_eval[dna] = overall_eval_measure
 
 
-fff = GAFeatureSelectionFFNN(85, 20, 1, dp_data.all_ft_data)
+start = time.time()
+fff = GAFeatureSelectionFFNN(dna_size=85, pop_size=10, num_hidden_units=7, data=dp_data.all_ft_data)
+# ccc = GAFeatureSelectionCasper(dna_size=85, pop_size=10, num_hidden_units=7, data=dp_data.all_ft_data)
+end = time.time()
+time_cost = end - start
+print('Time: ' + str(time_cost))
 
-# ccc = GAFeatureSelectionCasper(85, 20, 1, dp_data.all_ft_data)
-
-###############3
+###############
 # FFNN
 
 # ffnn_GA_file = open("ffnn_GA.txt", "w+")
@@ -124,4 +135,3 @@ fff = GAFeatureSelectionFFNN(85, 20, 1, dp_data.all_ft_data)
 #
 # casper_GA_file.write('time cost : \n' + str(time_cost))
 # casper_GA_file.close()
-
