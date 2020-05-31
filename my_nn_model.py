@@ -1,4 +1,4 @@
-# comp4660 assignment 1 code
+# comp4660 assignment 2 code
 # Author: Xiangyi Luo (u6162693)
 # Time: May 2020
 
@@ -153,10 +153,10 @@ class FFNNModelComparison(object):
     def final_evaluation(self):
         combine = eval.combine_pred_real_labels(self.all_final_pred_label, self.all_real_label)
         eval_measures, overall_accuracy = eval.evaluation(combine)
-        # print('evaluation for all model')
-        # print(eval_measures)
-        # print('accuracy')
-        # print(overall_accuracy)
+        print('evaluation for all model')
+        print(eval_measures)
+        print('accuracy')
+        print(overall_accuracy)
         return eval_measures, overall_accuracy
 
     def visualization(self):
@@ -165,10 +165,10 @@ class FFNNModelComparison(object):
             test_loss = self.test_loss_12[i]
 
             # Plot training loss
-            plt.figure()
+            plt.figure(figsize=(8, 6))
 
             # display training loss and testing loss
-            plt.title('training loss and testing loss during training')
+            plt.title('Training loss and Testing loss of FFNN \n All features  \n Hidden Units: ' + str(self.NUM_HIDDEN))
             plt.xlabel('epoch')
             plt.ylabel('CrossEntropy loss')
             plt.plot(train_loss, label='train loss')

@@ -1,4 +1,4 @@
-# comp4660 assignment 1 code
+# comp4660 assignment 2 code
 # Author: Xiangyi Luo (u6162693)
 # Time: May 2020
 
@@ -13,7 +13,6 @@ import data_preprocessing as data_pre
 import matplotlib.pyplot as plt
 import evaluation as eval
 import depression_data as dp_data
-import pdb
 
 
 # ##############################################################################################
@@ -399,8 +398,8 @@ class CasPerModel(object):
                 timestamp_value.append(critical_val.item())
 
         # Plot training loss and testing loss
-        plt.figure()
-        plt.title(' training loss and testing loss \n ' + title)
+        plt.figure(figsize=(8, 6))
+        plt.title('Training loss and Testing loss of Casper \n All features \n Hidden Units: ' + str(self.NUM_HIDDEN_NEURON))
         plt.xlabel('epoch')
         plt.ylabel('CrossEntropy loss')
         plt.plot(train_list, label='training loss')
@@ -419,8 +418,9 @@ class CasPerModelComparison(object):
                  data: torch.tensor,
                  use_lda: bool,
                  normalization_flag,
-                 hidden_num=1
-                 ):
+                 hidden_num=1,
+                 display=False):
+        self.display = display
         self.normalization_flag = normalization_flag
         self.train_data_list, self.test_data_list = dp_data.leave_one_participant_out(data, self.normalization_flag)
 
@@ -478,7 +478,8 @@ class CasPerModelComparison(object):
             # print evaluation for a model
             # print('------model ' + str(m_id))
             # model.model_eval()
-            # model.display_training_process()
+            if self.display:
+                model.display_training_process()
 
         self.all_models_pred_labels = torch.cat(all_model_labels)
 
@@ -489,8 +490,8 @@ class CasPerModelComparison(object):
         """
         combine = eval.combine_pred_real_labels(self.all_models_pred_labels, self.all_models_real_labels)
         eval_measures, overall_accuracy = eval.evaluation(combine)
-        # print(eval_measures)
-        # print(overall_accuracy)
+        print(eval_measures)
+        print(overall_accuracy)
         return eval_measures, overall_accuracy
 
 

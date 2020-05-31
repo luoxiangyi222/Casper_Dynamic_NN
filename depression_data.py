@@ -1,4 +1,4 @@
-# comp4660 assignment 1 code
+# comp4660 assignment 2 code
 # Author: Xiangyi Luo (u6162693)
 # Time: May 2020
 

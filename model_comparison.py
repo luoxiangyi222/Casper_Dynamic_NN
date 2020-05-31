@@ -1,4 +1,4 @@
-# comp4660 assignment 1 code
+# comp4660 assignment 2 code
 # Author: Xiangyi Luo (u6162693)
 # Time: May 2020
 
@@ -16,12 +16,11 @@ Each of these data will be put into:
 The goal of this module is to compare performance of models given different preprocessed data
 """
 
-import evaluation
-import data_preprocessing
+
 import my_casper_model as casper
 import my_nn_model as ffnn
 import depression_data as dp_data
-import time
+import ga_feature_selection as gafs
 
 # ##########################################################################################
 # Feed Forward Network
@@ -30,133 +29,46 @@ import time
 """
 To run model just uncomment related section!!!!!!!!!!!!!
 """
-# 1 all features
+# 1 FFNN
 
-# ffnn_allfeature_result_file = open("ffnn_allfeature_result.txt", "w+")
-# ffnn_allfeature_result_file.write('All features \n')
-# ffnn_allfeature_result_file.write('LDA: False  \n')
-#
-# all_accuracy_list = []
-# time_cost_list = []
-# for hn in range(1, 20):
-#     print('Hidden units: ' + str(hn))
-#     ffnn_allfeature_result_file.write('hidden units: ' + str(hn) + '\n')
-#     t1 = time.time()
-#     ffnn_compare = ffnn.FFNNModelComparison(dp_data.all_ft_data, use_lda=False, learning_rate=0.01, normalization_flag=2,
-#                                             epochs=3000, hidden_num=hn)
-#
-#     t2 = time.time()
-#     time_cost = t2 - t1
-#     time_cost_list.append(time_cost)
-#
-#     eval_measures, accuracy = ffnn_compare.final_evaluation()
-#     all_accuracy_list.append(accuracy)
-#
-#     ffnn_allfeature_result_file.write(str(eval_measures))
-#     ffnn_allfeature_result_file.write('\n')
-#     ffnn_allfeature_result_file.write(str(accuracy) + '\n')
-#
-# ffnn_allfeature_result_file.write('accuracy list: \n' + str(all_accuracy_list) + '\n')
-# ffnn_allfeature_result_file.write('time cost list: \n' + str(time_cost_list) + '\n')
-# print(all_accuracy_list)
-#
-# ffnn_allfeature_result_file.close()
+# ffnn_compare = ffnn.FFNNModelComparison(dp_data.all_ft_data, use_lda=False, learning_rate=0.01, normalization_flag=2,
+#                                         epochs=3000, hidden_num=5)
+# ffnn_compare.visualization()
+# ffnn_compare.final_evaluation()
 
-# 2 all feature + LDA
 
-ffnn_allfeature_LDA_result_file = open("ffnn_LDA_allfeature_result.txt", "w+")
-ffnn_allfeature_LDA_result_file.write('All features \n')
-ffnn_allfeature_LDA_result_file.write('LDA: True  \n')
+# 2 FFNN + LDA
 
-all_accuracy_list = []
-time_cost_list = []
-for hn in range(1, 20):
+# ffnn_compare = ffnn.FFNNModelComparison(dp_data.all_ft_data, use_lda=True, learning_rate=0.01, normalization_flag=2,
+#                                         epochs=3000, hidden_num=5)
+# ffnn_compare.visualization()
+# ffnn_compare.final_evaluation()
 
-    print('Hidden units: ' + str(hn))
-    ffnn_allfeature_LDA_result_file.write('hidden units: ' + str(hn) + '\n')
-    t1 = time.time()
-    ffnn_compare = ffnn.FFNNModelComparison(dp_data.all_ft_data, use_lda=True, learning_rate=0.01, normalization_flag=2,
-                                            epochs=3000, hidden_num=hn)
-    # ffnn_compare.visualization()
-    t2 = time.time()
-    time_cost = t2 - t1
-    time_cost_list.append(time_cost)
 
-    eval_measures, accuracy = ffnn_compare.final_evaluation()
-    all_accuracy_list.append(accuracy)
+# 3 FFNN + GA
 
-    ffnn_allfeature_LDA_result_file.write(str(eval_measures))
-    ffnn_allfeature_LDA_result_file.write('\n')
-    ffnn_allfeature_LDA_result_file.write(str(accuracy) + '\n')
-
-ffnn_allfeature_LDA_result_file.write('accuracy list: \n' + str(all_accuracy_list) + '\n')
-ffnn_allfeature_LDA_result_file.write('time cost list: \n' + str(time_cost_list) + '\n')
-print(all_accuracy_list)
-
-ffnn_allfeature_LDA_result_file.close()
+# ffnn_ga = gafs.GAFeatureSelectionFFNN(dna_size=85, pop_size=10, num_hidden_units=5, data=dp_data.all_ft_data)
 
 # #######################################################################
 # CasPer
 # #######################################################################
 
 
-# 1 all features
-# casper_allfeature_result_file = open("casper_allfeature_result.txt", "w+")
-# casper_allfeature_result_file.write('All features \n')
-# casper_allfeature_result_file.write('LDA: False  \n')
-#
-# all_accuracy_list = []
-# time_cost_list = []
-# for hn in range(1, 20):
-#     print('Hidden units: ' + str(hn))
-#     casper_allfeature_result_file.write('hidden units: ' + str(hn) + '\n')
-#     t1 = time.time()
-#     casperCompare = casper.CasPerModelComparison(data=dp_data.all_ft_data, use_lda=False,
-#                                                  normalization_flag=2, hidden_num=hn)
-#     eval_measures, accuracy = casperCompare.final_evaluation()
-#     all_accuracy_list.append(accuracy)
-#     t2 = time.time()
-#     time_cost = t2 - t1
-#     time_cost_list.append(time_cost)
-#
-#     casper_allfeature_result_file.write(str(eval_measures))
-#     casper_allfeature_result_file.write('\n')
-#     casper_allfeature_result_file.write(str(accuracy) + '\n')
-#
-# casper_allfeature_result_file.write('accuracy list: \n' + str(all_accuracy_list) + '\n')
-# casper_allfeature_result_file.write('time cost list: \n' + str(time_cost_list) + '\n')
-# print(all_accuracy_list)
-#
-# casper_allfeature_result_file.close()
+# 4 Casper
 
 
-# 2 all feature + LDA
-# compare number of hidden neurons
+# casperCompare = casper.CasPerModelComparison(data=dp_data.all_ft_data, use_lda=False,
+#                                              normalization_flag=2, hidden_num=5, display=True)
+# eval_measures, accuracy = casperCompare.final_evaluation()
 
-# casper_allfeature_lda_result_file = open("casper_allfeature_LDA_result.txt", "w+")
-# casper_allfeature_lda_result_file.write('All features \n')
-# casper_allfeature_lda_result_file.write('LDA: true  \n')
-#
-# all_lda_accuracy_list = []
-# time_cost_list = []
-# for hn in range(1, 20):
-#     print('Hidden units: ' + str(hn))
-#     casper_allfeature_lda_result_file.write('hidden units: ' + str(hn) + '\n')
-#     t1 = time.time()
-#     casperCompare = casper.CasPerModelComparison(data=dp_data.all_ft_data, use_lda=True,
-#                                                  normalization_flag=2, hidden_num=hn)
-#     eval_measures, accuracy = casperCompare.final_evaluation()
-#     all_lda_accuracy_list.append(accuracy)
-#     t2 = time.time()
-#     time_cost = t2 - t1
-#     time_cost_list.append(time_cost)
-#
-#     casper_allfeature_lda_result_file.write(str(eval_measures))
-#     casper_allfeature_lda_result_file.write('\n')
-#     casper_allfeature_lda_result_file.write(str(accuracy) + '\n')
-#
-# casper_allfeature_lda_result_file.write('accuracy list: \n' + str(all_lda_accuracy_list) + '\n')
-# casper_allfeature_lda_result_file.write('time cost list: \n' + str(time_cost_list) + '\n')
-# print(all_lda_accuracy_list)
-#
-# casper_allfeature_lda_result_file.close()
+
+# 5 all feature + LDA
+
+casperCompare = casper.CasPerModelComparison(data=dp_data.all_ft_data, use_lda=True,
+                                             normalization_flag=2, hidden_num=5, display=True)
+eval_measures, accuracy = casperCompare.final_evaluation()
+
+
+# 3 Casper + GA
+
+# casper_ga = gafs.GAFeatureSelectionCasper(dna_size=85, pop_size=10, num_hidden_units=5, data=dp_data.all_ft_data)

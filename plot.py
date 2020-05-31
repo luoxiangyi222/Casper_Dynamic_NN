@@ -106,6 +106,26 @@ casper_lda_accuracy = np.round(casper_lda_accuracy, 4)
 casper_lda_time_cost = np.average(casper_lda_time_cost, axis=0)
 casper_lda_time_cost = np.round(casper_lda_time_cost, 4)
 
+###############################
+# FFFNN + GA
+###############################
+
+ffnn_ga_accuracy = np.array([0.34895833, 0.34895833, 0.33854167, 0.375, 0.328125, 0.35416667, 0.359375, 0.38020833, 0.359375, 0.359375])
+ffnn_ga_accuracy = np.around(ffnn_ga_accuracy, 4)
+
+ffnn_ga_time = np.array([392, 514, 608, 3593, 2349, 3092, 2788, 5374, 3759, 3150])
+ffnn_ga_time = np.around(ffnn_ga_time, 4)
+
+###############################
+# Casper + GA
+###############################
+
+casper_ga_accuracy = np.array([0.36979167, 0.36458333,0.36458333, 0.34375, 0.359375, 0.34375, 0.359375, 0.36979167, 0.34895833, 0.35416667 ])
+casper_ga_accuracy = np.around(casper_ga_accuracy, 4)
+
+casper_ga_time = np.array([276, 586, 787, 764, 1164, 1184, 1371, 2849, 1656, 2952])
+casper_ga_time = np.around(casper_ga_time, 4)
+
 
 #### plot accuracy
 xl = list(range(1, 20))
@@ -116,11 +136,14 @@ plt.xlabel('Number of Hidden Units')
 plt.ylabel('Averaged overall accuracy')
 plt.xticks(np.arange(19), labels=xl)
 
-plt.plot(ffnn_accuracy, label='FFNN ', marker='o', color='orange', alpha=0.3)
-plt.plot(ffnn_lda_accuracy, label='FFNN + LDA', marker='o', color='orange')
+plt.plot(ffnn_accuracy, label='FFNN ', marker='o', color='black', alpha=0.3)
+plt.plot(ffnn_lda_accuracy, label='FFNN + LDA', marker='^', color='orange', alpha=0.3)
+plt.plot(ffnn_ga_accuracy, label='FFNN + GA', marker='x', color='b', alpha=0.3)
 
-plt.plot(casper_accuracy, label='Casper ', marker='o', color='b', alpha=0.3)
-plt.plot(casper_lda_accuracy, label='Casper + LDA', marker='o', color='b')
+plt.plot(casper_accuracy, label='Casper ', marker='o', color='black')
+plt.plot(casper_lda_accuracy, label='Casper + LDA', marker='^', color='orange')
+plt.plot(casper_ga_accuracy, label='Casper + GA', marker='x', color='b')
+
 
 plt.legend()
 plt.show()
@@ -134,11 +157,27 @@ plt.xlabel('Number of Hidden Units')
 plt.ylabel('Averaged time cost/seconds')
 plt.xticks(np.arange(19), labels=xl)
 
-plt.plot(ffnn_time, label='FFNN ', marker='o', color='orange', alpha=0.3)
-plt.plot(ffnn_lda_time, label='FFNN + LDA', marker='o', color='orange')
+plt.plot(ffnn_time, label='FFNN ', marker='o', color='black', alpha=0.3)
+plt.plot(ffnn_lda_time, label='FFNN + LDA', marker='^', color='orange', alpha=0.3)
 
-plt.plot(casper_time_cost, label='Casper ', marker='o', color='b', alpha=0.3)
-plt.plot(casper_lda_time_cost, label='Casper + LDA', marker='o', color='b')
 
+plt.plot(casper_time_cost, label='Casper ', marker='o', color='black')
+plt.plot(casper_lda_time_cost, label='Casper + LDA', marker='^', color='orange')
+
+
+plt.legend()
+plt.show()
+
+
+
+xl = list(range(1, 11))
+plt.figure(figsize=(10, 8))
+plt.title('Time cost of GA feature selection for different numbers of hidden units')
+plt.xlabel('Number of Hidden Units')
+plt.ylabel('time cost/seconds')
+plt.xticks(np.arange(19), labels=xl)
+
+plt.plot(ffnn_ga_time, label='FFNN + GA', marker='x', color='blue', alpha=0.3)
+plt.plot(casper_ga_time, label='Casper + GA', marker='x', color='blue')
 plt.legend()
 plt.show()

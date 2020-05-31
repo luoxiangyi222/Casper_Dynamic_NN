@@ -335,4 +335,4 @@ class GA(object):
         return np.array(index)
 
 
-# ga = GA(5, 10)
+

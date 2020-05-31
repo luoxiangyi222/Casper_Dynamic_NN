@@ -4,9 +4,7 @@
 
 from ga_abstract import GA
 import my_nn_model as ffnn
-import depression_data as dp_data
 import my_casper_model as casper
-import time
 
 
 class GAFeatureSelectionFFNN(GA):
@@ -81,12 +79,6 @@ class GAFeatureSelectionCasper(GA):
                 self.old_candidate_eval[dna] = overall_eval_measure
 
 
-start = time.time()
-fff = GAFeatureSelectionFFNN(dna_size=85, pop_size=10, num_hidden_units=7, data=dp_data.all_ft_data)
-# ccc = GAFeatureSelectionCasper(dna_size=85, pop_size=10, num_hidden_units=7, data=dp_data.all_ft_data)
-end = time.time()
-time_cost = end - start
-print('Time: ' + str(time_cost))
 
 ###############
 # FFNN
