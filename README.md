@@ -1,7 +1,7 @@
 
 ## Using Genetic Algorithm for Feature Selection in FFNN and Casper NN
 
-Assignment Author: Xiangyi Luo (u6162693)  
+Assignment Author: Akira Luo
 
 The model was reproduced by [the Casper paper](https://www.researchgate.net/figure/The-CasPer-architecture-a-second-hidden-neuron-has-just-been-added-The-vertical-lines_fig1_220934751).
 
