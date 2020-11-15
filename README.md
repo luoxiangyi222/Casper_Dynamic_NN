@@ -1,7 +1,7 @@
 
 ## Using Genetic Algorithm for Feature Selection in FFNN and Casper NN
 
-Assignment Author: Xiangyi Luo
+Author: Xiangyi Luo
 
 The model reproduces network invented in [the Casper paper](https://www.researchgate.net/publication/227146979_A_Cascade_network_algorithm_employing_Progressive_RPROP).
 
