@@ -3,7 +3,7 @@
 
 Assignment Author: Xiangyi Luo
 
-The model reproduces network invented in [the Casper paper](https://www.researchgate.net/figure/The-CasPer-architecture-a-second-hidden-neuron-has-just-been-added-The-vertical-lines_fig1_220934751).
+The model reproduces network invented in [the Casper paper](https://www.researchgate.net/publication/227146979_A_Cascade_network_algorithm_employing_Progressive_RPROP).
 
 The model is used for analyzing observers' phsiological signals (the obsersers reaction to depression video).
 
